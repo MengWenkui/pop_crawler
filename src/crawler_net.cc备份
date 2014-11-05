@@ -1,0 +1,75 @@
+#include "crawler_net.h"
+
+crawler_net::crawler_net()
+{
+	curl_global_init(CURL_GLOBAL_ALL);
+	m_curl = curl_easy_init();
+	if(!m_curl)
+	{
+        std::cout << "curl_easy_init() error";
+	}
+}
+
+crawler_net::~crawler_net()
+{
+	curl_global_cleanup();
+	curl_easy_cleanup(m_curl);
+}
+
+void crawler_net::net_set_headers(map<string,string> header)
+{
+    map<string,string>::iterator header_iter;
+    string header_item;
+    struct curl_slist *header_list = NULL;
+    for(header_iter = header.begin();header_iter != header.end(); ++header_iter)
+    {
+        header_item = header_iter->first + ":" + header_iter->second;   
+        header_list = curl_slist_append(header_list,header_item.data());
+    }
+    curl_easy_setopt(m_curl,CURLOPT_HTTPHEADER,header_list);
+}
+
+int crawler_net::net_http_get_content(char* http_url)
+{
+	curl_easy_setopt(m_curl,CURLOPT_URL,http_url);
+    //当返回为3xx时进行重定向
+    //curl_easy_setopt(m_curl,CURLOPT_FOLLOWLOCATION,1L);
+	int res_code = curl_easy_perform(m_curl);
+    if( res_code != CURLE_OK)
+    {
+        std::cout << "curl_easy_perform() error";
+    }
+    curl_easy_reset(m_curl);
+    return res_code;
+}
+
+int crawler_net::net_https_get_content(char* https_url)
+{
+    curl_easy_setopt(m_curl,CURLOPT_URL,https_url);
+    //curl_easy_setopt(m_curl,CURLOPT_FLLOWLOCATION,1L);
+    //https安全验证,如果不需要直接调用http
+    curl_easy_setopt(m_curl,CURLOPT_SSL_VERIFYPEER,0L);
+    curl_easy_setopt(m_curl,CURLOPT_SSL_VERIFYHOST,0L);
+    int res_code = curl_easy_perform(m_curl);
+    if( res_code != CURLE_OK)
+    {
+        std::cout << "curl_easy_perform error";
+    }
+    curl_easy_reset(m_curl);
+    return 0;
+}
+
+int crawler_net::net_http_post(char* http_url,char* post_data)
+{
+    curl_easy_setopt(m_curl,CURLOPT_POSTFIELDSIZE,long(strlen(post_data)));
+    curl_easy_setopt(m_curl,CURLOPT_POSTFIELDS,post_data);
+    int res_code = curl_easy_perform(m_curl);
+    if(res_code != CURLE_OK)
+    {
+        cout << "net_http_post() error";
+    }
+    curl_easy_reset(m_curl);
+    return res_code;
+}
+
+

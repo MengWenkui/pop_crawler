@@ -1,0 +1,29 @@
+/**
+ * 二次封装curl的爬虫网络类
+ * 作者：张春阳
+ * 创建时间：2014-10-23
+ */
+
+#ifndef CRAWLER_NET_H
+#define CRAWLER_NET_H
+
+#include <curl/curl.h>
+#include <iostream>
+#include <map>
+#include <string>
+using namespace std;
+
+class crawler_net
+{
+public:
+	crawler_net();
+	~crawler_net();
+    void net_set_headers(map<string,string>);
+	int net_http_get_content(char*);
+	int net_https_get_content(char*);
+    int net_http_post(char*, char*);
+private:
+	CURL* m_curl;
+};
+
+#endif
