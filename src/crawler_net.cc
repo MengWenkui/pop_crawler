@@ -40,3 +40,4 @@ int crawler_net::net_dns_parse(const string& domain,string& host)
 
     return 0;
 }
+
