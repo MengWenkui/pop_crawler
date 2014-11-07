@@ -3,26 +3,24 @@
 
 #pragma once
 #include <string>
-#include <regex>
+#include <boost/regex.hpp>
 
 class crawler_url_parse
 {
 public:
     std::string URL;
     std::string PROTOCOL;
-    std::string HOST;
+    std::string DOMAIN;
     std::string PORT;
     std::string PATH;
     std::string PARAM;
+    std::string IP;
     crawler_url_parse();
     crawler_url_parse(const std::string&);
     ~crawler_url_parse();
 private:
-    void url_parse_protocol();
-    void url_parse_host();
-    void url_parse_port();
-    void url_parse_path();
-    void url_parse_param()
+    std::string reg_pattern;
+    void url_parse_regex(const std::string&);
 };
 
 #endif
