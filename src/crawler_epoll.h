@@ -7,11 +7,10 @@
 #ifndef _CRAWLER_EPOLL_H
 #define _CRAWLER_EPOLL_H
 
-#include <stdio.h>
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <errno.h>
-
+#include <iostream>
 //回调中的响应类型
 const int EV_READ = 0x01;
 const int EV_WRITE = 0x02;
@@ -25,7 +24,7 @@ public:
     //析构函数
     ~crawler_epoll();
     //epoll初始化，设置回调函数
-    int epoll_init(const void*(*)(const int,const int));
+    int epoll_init(void*(*)(const int,const int));
     //向epoll中添加fd和注册的事件
     int epoll_add(const int,const uint32_t);
     //移除epoll中的fd和相应的事件
@@ -39,7 +38,7 @@ private:
     struct epoll_event *events;
     int epo_fd;
     bool epoll_manage(const int,const uint32_t,const int);
-    const void* (*epoll_event_callback)(const int,const int);
+    void* (*epoll_event_callback)(const int,const int);
 };
 
 #endif

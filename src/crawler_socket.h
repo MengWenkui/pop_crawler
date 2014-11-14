@@ -12,6 +12,7 @@
 #include <string>
 #include <fcntl.h>
 #include <stdio.h>
+#include <iostream>
 
 class crawler_socket
 {

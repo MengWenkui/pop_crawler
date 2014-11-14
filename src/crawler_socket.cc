@@ -82,7 +82,10 @@ int crawler_socket::socket_recv(string& data)
     //循环读取，直到全部读取完毕
     while(1)
     {
+        cout << "读取" << endl;
         int n = read(socket_fd,read_data + read_len,EACH_RECV_LEN);
+        cout << "读取长度" << n << endl;
+        cout << "错误码" << errno << endl;
 
         //失败
         if(n < 0)

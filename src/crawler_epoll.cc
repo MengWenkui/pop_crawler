@@ -34,7 +34,7 @@ crawler_epoll::~crawler_epoll()
 
 }
 
-int crawler_epoll::epoll_init(const void*(*func)(const int,const int))
+int crawler_epoll::epoll_init(void*(*func)(const int,const int))
 {
     //初始化回调地址
     epoll_event_callback = func;
@@ -117,13 +117,16 @@ int crawler_epoll::epoll_run(const int timeout)
     //循环获取事件
     while(1)
     {
+        cout << "阻塞" << endl;
         //等待事件（阻塞）
         int fd_counts = epoll_wait(epo_fd,events,MAX_CONNECTION+1,timeout);
-        
-        if(errno == EBADF || EFAULT || EINVAL)
+       
+        if((errno == EBADF || EFAULT || EINVAL) && fd_counts < 0)
         {
             return -1;
         }
+        
+        cout << "事件数量" << fd_counts << endl;
 
         //轮询每个事件
         for(int i = 0;i <  fd_counts;i++)
