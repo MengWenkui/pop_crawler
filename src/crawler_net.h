@@ -19,6 +19,7 @@ public:
     crawler_net();
     ~crawler_net();
 private:
+    std::vector<std::string> vec_header;
     int net_dns_parse(const std::string&,string&);
 };
 
