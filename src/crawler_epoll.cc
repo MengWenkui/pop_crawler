@@ -41,6 +41,12 @@ int crawler_epoll::epoll_init(void*(*func)(const int,const int))
     return 0;
 }
 
+int crawler_epoll::epoll_set_server(const int server)
+{
+    server_fd = server;
+    return 0;
+}
+
 //env为：
 //EPOLLIN
 //      相关联的文件对 read(2) 操作有效。
@@ -80,7 +86,7 @@ int crawler_epoll::epoll_add(const int socket_fd,const uint32_t env)
     {
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -117,7 +123,6 @@ int crawler_epoll::epoll_run(const int timeout)
     //循环获取事件
     while(1)
     {
-        cout << "阻塞" << endl;
         //等待事件（阻塞）
         int fd_counts = epoll_wait(epo_fd,events,MAX_CONNECTION+1,timeout);
        
@@ -126,12 +131,12 @@ int crawler_epoll::epoll_run(const int timeout)
             return -1;
         }
         
-        cout << "事件数量" << fd_counts << endl;
-
         //轮询每个事件
-        for(int i = 0;i <  fd_counts;i++)
+        for(int i = 0;i < fd_counts;i++)
         {
             int op = 0;
+
+            cout << "事件的代码" << events[i].events << endl;
 
             //错误事件和等待延时事件，暂时不做处理
             if(events[i].events & (EPOLLERR | EPOLLHUP))
@@ -139,9 +144,13 @@ int crawler_epoll::epoll_run(const int timeout)
                 continue;
             }
             //对方断开连接事件
-            else if(events[i].events & EPOLLRDHUP)
+            else if(events[i].events == (EPOLLRDHUP | EPOLLIN))
             {
                 op |= EV_DROP;
+            }
+            else if(events[i].data.fd == server_fd)
+            {
+                op |= EV_ACCEPT;
             }
             //正常的读写事件
             else

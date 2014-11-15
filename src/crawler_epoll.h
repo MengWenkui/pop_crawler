@@ -15,6 +15,7 @@
 const int EV_READ = 0x01;
 const int EV_WRITE = 0x02;
 const int EV_DROP = 0x04;
+const int EV_ACCEPT = 0x08;
 
 class crawler_epoll
 {
@@ -25,6 +26,8 @@ public:
     ~crawler_epoll();
     //epoll初始化，设置回调函数
     int epoll_init(void*(*)(const int,const int));
+    //设置成server模式
+    int epoll_set_server(const int);
     //向epoll中添加fd和注册的事件
     int epoll_add(const int,const uint32_t);
     //移除epoll中的fd和相应的事件
@@ -34,6 +37,7 @@ public:
     //等待事件触发
     int epoll_run(const int);
 private:
+    int server_fd;
     int epo_type;
     struct epoll_event *events;
     int epo_fd;
