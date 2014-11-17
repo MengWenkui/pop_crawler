@@ -11,16 +11,30 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <map>
-#include <vector>
+#include "crawler_epoll.h"
+#include "crawler_socket.h"
+#include "crawler_thread_poll.h"
+#include "crawler_log.h"
 
 class crawler_net
 {
 public:
     crawler_net();
     ~crawler_net();
+    int net_reload();
+    int net_add_header();
+    int net_http_get();
+    int net_http_post();
 private:
-    std::vector<std::string> vec_header;
+    crawler_epoll request_epoll;
+    crawler_epoll response_epoll;
+    std::map<std::string,std::string> header_map;
+    int net_url_parse();
     int net_dns_parse(const std::string&,string&);
+    int net_socket_init();
+    void* request_callback_func(const int,const int);
+    void* response_callback_func(const int,const int);
+
 };
 
 #endif
