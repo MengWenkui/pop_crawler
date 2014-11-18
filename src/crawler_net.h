@@ -16,6 +16,12 @@
 #include "crawler_thread_poll.h"
 #include "crawler_log.h"
 
+struct socket_packet
+{
+    int socket_fd;
+    string request;
+}
+
 class crawler_net
 {
 public:
@@ -26,6 +32,9 @@ public:
     int net_http_get();
     int net_http_post();
 private:
+    string http;
+    crawler_thread_poll work_thread_poll;
+    crawler_url_parse url_parser;
     crawler_epoll request_epoll;
     crawler_epoll response_epoll;
     std::map<std::string,std::string> header_map;

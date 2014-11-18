@@ -7,6 +7,8 @@ crawler_net::crawler_net()
     request_epoll.init(&request_callback_func);
     //设置接收回调函数
     response_epoll.init(&response_callback_func);
+    //初始化线程池
+    work_thread_poll(30);
     //添加默认情况下的必要header
     header_map["Host"] = 网站域名;
     header_map["Referer"] = 带有协议的域名;
@@ -23,13 +25,57 @@ crawler_net::~crawler_net()
     
 }
 
-int crawler_net::net_url_parse(const string& url)
+int crawler_net::net_set_header(const string& header_key,const string& header_value)
 {
-    //调用crawler_url_parse类进行url解析
+    header_map[header] = header_value;
     return 0;
 }
 
-int crawler_net::net_dns_parse(const string& domain,string& host)
+int crawler_net::net_http_get(const string& url,const string& param,const string& data)
+{
+    //1 解析url
+    url_parser.url_parse(url);
+    net_url_parse(url);
+    //2 对解析出来的域名进行dns
+    string ip;
+    net_dns_parse(url_parser.HOST,ip);
+    //3 设置好相应的request的内容
+    //通过get的方式进行数据发送,包括无数据
+    string http_request = "GET" + url + data + "HTTP/1.1\r\n";
+    string http_header;
+    //从header_map中取出header并放入http请求报文中
+    map<string,string>::iterator header_iter = header_map.begin();
+    for(;header_iter != header_map.end();header_iter++)
+    {
+        http_header += header_iter->first + ":" + header_iter->second + "\r\n";
+    }
+
+    if(!url_parser.PARAM.empty())
+    {
+        string http_data += (url_parser.PARAM + "\r\n");
+    }
+
+    http = http_request + http_header + "\r\n" + http_data;
+
+    //4 建立连接并放入epoll
+    if(!url_parser.PORT)
+    {
+        crawler_socket http_socket(url_parser.PORT,1,ip);
+    }
+
+    crawler_socket http_socket(80,1,ip);
+    request_epool.epoll_add(http_socket.socket_fd,EPOLLOUT | EPOLLIN); 
+        
+    return 0;   
+}
+
+int crawler_net::net_http_post(const string& http_ur,const string& data)
+{
+    //通过post的方式进行数据发送
+    return 0;
+}
+
+int crawler_net::net_dns_parse(const string& domain,string& host_ip)
 {
     struct hostent *p_host;
     char ip_addr[32] = {0};
@@ -59,50 +105,61 @@ int crawler_net::net_dns_parse(const string& domain,string& host)
     return 0;
 }
 
-int crawler_net::net_http_get(const string& url,const string& param,const string& data)
+void* crawler_net::request_callback_func(const int sock,const int opt)
 {
-    //1 解析url
-    //2 对解析出来的域名进行dns
-    //3 设置好相应的request的内容
-    //4 建立连接并放入epoll
     //5 收到epoll回调，将任务加入到线程池中
-    //  请求的任务执行完就回收线程资源，应答的任务执行完还要进行html解析，存入数据库，加入布隆过滤器等工作
+    if(EV_WRITE = opt)
+    {
+        struct socket_packet pack = {0};
+        pack.socket_fd = sock;
+        pack.request = http;
+        work_thread_poll.thread_poll_add_job(thread_request_func,&pack);
+    }
 
-    //通过get的方式进行数据发送,包括无数据
-    string http_request = "GET" + url + data + "HTTP/1.1\r\n";
-    string http_header;
-            //添加手动设置的header，如果和默认的冲突，添加手动添加的
-        vector<string>::iterator header_iter = vec_header.begin();
-        for(;header_iter != vec_header.end();header_iter++)
-        {
-            http_header = *header_iter + "\r\n";
-        }
-    string http_data = data;
-    string http = http_request + http_header + "\r\n" + http_http_data;
+}
+
+void* crawler_net::thread_request_func(void* obj)
+{
+    socket_packet *para = (socket_packet*)obj;
+
+    if(!crawler_socket::socket_send(para->socket_fd,para->request,para->request.size()))
+    {
+        //请求成功就将url放入bloom_filter
+        //成功了就退出，归还线程资源
+    }
+
+
+}
+
+void* response_callback_func(const int sock,const int opt)
+{
+    if(EV_READ = opt)
+    {
+        work_thread_poll.thread_poll_add_job(thread_response_func,&sock);
+    }
     
-
-    
-    return 0;   
+    if(EV_DROP = opt)
+    {
+        //断线处理
+    }
 }
 
-int crawler_net::net_http_post(const string& http_ur,const string& data)
+void* crawler_net::thread_response_func(void* obj)
 {
-    //通过post的方式进行数据发送
-    return 0;
-}
+    int *socket_fd = (int*)obj;
 
-int crawler_net::net_socket_init()
-{
-    //socket的初始化工作
-    return 0;
-}
+    string response_str;
 
-void* request_callback_func(const int,const int)
-{
+    if(!crawler_socket::socket_send(socket_fd,response_str))
+    {
+        //接收成功，处理html
+        //提取html中的url
+        //向bloom_filter进行验证是否已经请求过
+        //没有请求过则把url加入大队列中
+        //提取html中用户感兴趣的部分，这部分由另一个类单独实现，实现用户定制
+        //将提取出来感兴趣的部分存入数据库中
+        //完成一次抓取
+    }
 
-}
-
-void* response_callback_func(const int,const int)
-{
 
 }

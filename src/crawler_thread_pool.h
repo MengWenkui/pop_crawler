@@ -31,7 +31,7 @@ class crawler_thread_pool
 {
 public:
     int err_code;
-    crawler_thread_pool();
+    crawler_thread_pool(const int thread_num = 10);
     ~crawler_thread_pool();
     int thread_pool_add_job(void* (*)(void*),void*);
     int thread_pool_destroy();

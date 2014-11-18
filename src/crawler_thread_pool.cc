@@ -2,7 +2,7 @@
 using namespace std;
 
 //线程池构造函数
-crawler_thread_pool::crawler_thread_pool()
+crawler_thread_pool::crawler_thread_pool(const int thread_num)
 {
     do
     {
