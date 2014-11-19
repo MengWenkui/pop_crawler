@@ -13,8 +13,9 @@
 #include <map>
 #include "crawler_epoll.h"
 #include "crawler_socket.h"
-#include "crawler_thread_poll.h"
+#include "crawler_thread_pool.h"
 #include "crawler_log.h"
+#include "crawler_bloom_filter.h"
 
 struct socket_packet
 {
@@ -32,6 +33,7 @@ public:
     int net_http_get();
     int net_http_post();
 private:
+    crawler_bloom_filter url_bloom_filter;
     string http;
     crawler_thread_poll work_thread_poll;
     crawler_url_parse url_parser;
@@ -43,7 +45,6 @@ private:
     int net_socket_init();
     void* request_callback_func(const int,const int);
     void* response_callback_func(const int,const int);
-
 };
 
 #endif

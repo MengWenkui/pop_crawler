@@ -1,147 +1,287 @@
 #include "crawler_config.h"
+#include "stdafx.h"
+#include <stdio.h>
+#include <algorithm>
+#include <string.h>
 using namespace std;
-//注释标识
-#define COMMENT_MARK "#"
-//空行标识
-#define SPACE_MARK "*"
-//每行最大长度
+
+int err_code;
+
+const string COMMENT_MARK = "#";
+const string SPACE_MARK = "*";
+const string ASSIGN_MARK = "=";
+const char DOT_MARK = ','; 
+const char COLON_MARK = '"';
+
 #define EACH_LINE_MAX 2048 
 
-//无参数构造函数
+void crawler_config::_constructor()
+{
+
+}
+
 crawler_config::crawler_config()
 {
-    config_map_counts = 0;
-    err_code = 0;
+    _constructor();
 }
 
-//带有文件名参数的构造函数
 crawler_config::crawler_config(const string& file_name)
 {
-    err_code = 0;
+    _constructor();
 
-    if(file_name.empty())
+    if(_file_open(file_name))
     {
-        err_code = 800;
-        return;
+        printf("生成配置文件失败，错误码【%d】",err_code);
     }
 
-    config_map_counts = 0;
-    err_code = 0;
-    config_file_name = file_name;
-    config_read_file.open(file_name.c_str());
-
-    if(config_read_file.bad())
-    {
-        err_code = 801;
-        printf("配置文件【%s】打开失败",file_name.c_str()); 
-        return;
-    }
-
-    config_map_counts = config_generate_map();
 }
 
-//析构函数
 crawler_config::~crawler_config()
 {
-    config_read_file.close();
+    _read_file_fd.close();
 }
 
-//初始化配置文件对象,作用与带参数的构造函数相同
-//返回值：成功返回0
-int crawler_config::config_init(const string& file_name)
+int crawler_config::_file_open(const string& file_name)
 {
-    int res = 0;
-
     if(file_name.empty())
     {
         err_code = 800;
-        return err_code;
+        return -1;
     }
 
     config_file_name = file_name;
-    config_read_file.open(file_name.c_str());
+    _read_file_fd.open(file_name.c_str());
 
-    if(!config_read_file)
+    if(!_read_file_fd)
     {
         err_code = 801;
-        printf("配置文件【%s】打开失败",file_name.c_str());
-        return err_code;
+        return -2;
     }
 
-    if((config_map_counts = config_generate_map()) == -1)
+    if(_generate_map() == -1)
     {
-        err_code = 888;
-        return err_code;
+        err_code = 802;
+        return -3;
     }
 
-    return res;  
+    return 0;
+
 }
 
-//生成配置文件的map
-//返回值：成功返回k-v的个数，失败返回-1
-int crawler_config::config_generate_map()
+int crawler_config::config_init(const string& file_name)
 {
-    int map_count = 0;
-    string each_line,no_comment_line,trim_key,trim_value;
+    if(_file_open(file_name))
+    {
+        printf("生成配置文件失败，错误码【%d】",err_code);
+        return -1;
+    }
+    
+    return 0;  
+}
+
+bool crawler_config::_judge_key_validate(const string& key)
+{
+    if(key[0] > '0' && key[0] < '9')
+    {
+        return false;
+    }
+
+    return true;
+}
+
+int  crawler_config::_split_comment(const string& each_line,string& nocomment_line)
+{
+    int mark_pos = 0;
+
+    if((mark_pos = each_line.find(COMMENT_MARK)) != -1)
+    {
+        if(mark_pos == 0)
+        {
+            return 1;
+        }
+        else
+        {
+            nocomment_line = each_line.substr(0,mark_pos+1);
+            return 2;
+        }
+    }
+    
+    _index.push_back(make_pair(COMMENT_MARK,each_line.size()));
+
+    nocomment_line = each_line;
+
+    return 3;
+        
+}
+
+int crawler_config::_split_assign(const string& nocomment_line,string& trim_key,string& trim_value)
+{
+    int mark_pos = 0;
+
+    if((mark_pos = nocomment_line.find(ASSIGN_MARK)) != -1)
+    {
+        if(mark_pos == 0)
+        {
+            return -2;
+        }
+        else
+        {
+            trim_key = nocomment_line.substr(0,mark_pos);
+            trim_value = nocomment_line.substr(mark_pos+1,nocomment_line.size()-mark_pos);
+
+            return 0;
+        }
+    }
+
+     
+    return -1;
+}
+
+void crawler_config::_split_value(const string& trim_value,vector<string>& vec_values)
+{
+    if(trim_value[0] != '{')
+    {
+        vec_values.push_back(trim_value);
+        return;
+    }
+
+
+    string each_line;
+    string whole_value;
+    while(getline(_read_file_fd,each_line))
+    {   
+        if(_trim_space(each_line))
+        {
+             continue;
+        }
+
+        string nocomment_line;
+
+        if(_split_comment(each_line,nocomment_line) == 1)
+        {
+            continue;
+        }
+        else
+        {
+            if(each_line[0] == '}')
+            {
+                break;
+            }
+            else
+            {
+                whole_value += each_line;
+            }
+        }
+    }
+        
+    string sub_value;
+    int false_mark_pos = 0,real_mark_pos = 0,start_pos = 0;
+
+    while((false_mark_pos = whole_value.find(DOT_MARK,false_mark_pos)) != -1)
+    {
+        if(whole_value[false_mark_pos-1] == COLON_MARK)
+        {
+            real_mark_pos = false_mark_pos;
+            sub_value = whole_value.substr(start_pos,real_mark_pos-start_pos);
+            if(_trim_space(sub_value))
+            {
+                continue;
+            }
+            if(sub_value[sub_value.size()-1] == COLON_MARK)
+            {
+                start_pos = real_mark_pos + 1;
+                false_mark_pos++;
+                _trim_solon(sub_value);
+                vec_values.push_back(sub_value);
+            }
+            else
+            {
+                false_mark_pos++;
+            }
+        }
+        else
+        {
+            false_mark_pos++;
+            continue;
+        }
+    }
+
+    sub_value = whole_value.substr(real_mark_pos+1,whole_value.size()-real_mark_pos);
+    _trim_solon(sub_value);
+    vec_values.push_back(sub_value);
+}
+
+int crawler_config::_generate_map()
+{
+    string each_line;
     //按行获取文件
-    while(getline(config_read_file,each_line))
+    while(getline(_read_file_fd,each_line))
     {
         //如果该行为空则跳过
         if(each_line.empty())
         {
-            config_index.push_back(make_pair(SPACE_MARK,1));
+            _index.push_back(make_pair(SPACE_MARK,1));
             continue;
         }
-
-        int pos =0,start_pos = 0,end_pos = each_line.size()-1;
-
-        //查找注释标志的位置，如果在第1个则忽略该行，如果不是第1个则截取它前面的字符串
-        if((pos = each_line.find(COMMENT_MARK)) != -1)
-        {
-            if(pos == 0)
-            {
-                config_index.push_back(make_pair(COMMENT_MARK,each_line.size()));
-                continue;
-            }
-            end_pos = pos;
-        }
-
-        no_comment_line = each_line.substr(start_pos,start_pos + end_pos+1);
-
-        //查找截取后"="的位置，如果在第1个则该行忽略，如果不是第1个则截取它前面的字符串
-        if((pos = no_comment_line.find('=')) == -1)
+        
+        string nocomment_line;
+        
+        if(_split_comment(each_line,nocomment_line) == 1)
         {
             continue;
         }
+        
+//printf((nocomment_line+"\n").c_str());
 
-        trim_key = no_comment_line.substr(0,pos);
-        //去掉前后的空格
-        //截取'='后面的字符串
-        trim_value = no_comment_line.substr(pos+1,end_pos-pos);
-        //去掉前后的空格
-        config_trim(trim_value);
-        config_trim(trim_key);
+        string trim_key,trim_value;
+
+        _index.push_back(make_pair(trim_key,each_line.size()));
+
+        if(_split_assign(nocomment_line,trim_key,trim_value) != 0)
+        {
+            //发生错误是否停止
+            continue;
+        }
+        
+//printf((trim_key+"\n").c_str());
+
+        if(_trim_space(trim_key))
+        {
+            //发生错误
+            continue;
+        }
+
+        if(_trim_space(trim_value))
+        {
+            continue;
+        }
+
+        //判断key是否符合语法规范
+        if(!_judge_key_validate(trim_key))
+        {
+            //不合法的情况该如何处理
+            continue;
+        }
+
+        vector<string> vec_values;
+
+        _split_value(trim_value,vec_values);
+
         //存入生成的config_map中
-        config_map[trim_key] = trim_value;
-        config_index.push_back(make_pair(trim_key,each_line.size()));
+        config_map.insert(pair<string,vector<string> >(trim_key,vec_values));
         //解析出的k-v对的个数
-        map_count++;
-        //将config_map_iter赋值
-        config_map_iter = config_map.begin();
         each_line.clear();
     }
 
-    if(map_count == 0)
+    if(config_map.empty())
     {
         return -1;
     }
 
-    return map_count;
+    return config_map.size();
 }
 
-//去掉字符串的前后空格
-//返回值：0成功，-1字符串为空，-2字符串都是空格
-int crawler_config::config_trim(string& trim_str)
+int crawler_config::_trim_space(string& trim_str)
 {
     //字符串是否为空
     if(trim_str.empty())
@@ -154,7 +294,7 @@ int crawler_config::config_trim(string& trim_str)
 
     for(i = 0;i < trim_str.size();i++)
     {
-        if(!config_is_space(trim_str[i]))
+        if(!_is_space(trim_str[i]))
         {
             break;        
         }
@@ -172,7 +312,7 @@ int crawler_config::config_trim(string& trim_str)
     //从后向前找字符不为空格的位置
     for(i = trim_str.size()-1; i >= start_pos; i--)
     {
-        if(!config_is_space(trim_str[i]))
+        if(!_is_space(trim_str[i]))
         {
             break;
         }
@@ -186,9 +326,20 @@ int crawler_config::config_trim(string& trim_str)
     return 0;
 }
 
-//判断字符是否为空格
-//返回值：空格true，不是空格false
-bool crawler_config::config_is_space(char c)
+void crawler_config::_trim_solon(string& trim_str)
+{
+    if(trim_str[0] == '"')
+    {
+        trim_str.erase(0,1);
+    }
+    
+    if(trim_str[trim_str.size()-1] == '"')
+    {
+        trim_str.erase(trim_str.size()-1,1);
+    }
+}
+
+bool crawler_config::_is_space(char c)
 {
     if(c == ' ' || c == '\t')
     {
@@ -198,11 +349,10 @@ bool crawler_config::config_is_space(char c)
     return false;
 }
 
-//写入配置文件
-//返回值：0添加配置项，1更新配置项，801系统错误
 int crawler_config::config_write(const string& key,const string& value)
 {
     int res = 0;
+    vector<string> vec_key;
 
     if(key.empty() || value.empty())
     {
@@ -215,10 +365,10 @@ int crawler_config::config_write(const string& key,const string& value)
     char config_item_tmp[EACH_LINE_MAX] = {0};
     //写入的配置项
     string config_item = key + " = " + value;
-    config_write_file.open(config_file_name.c_str());
+    _write_file_fd.open(config_file_name.c_str());
     //搜索是否已经存在
     vector<pair<string,int> >::iterator find_iter;
-    for(find_iter = config_index.begin();find_iter != config_index.end();find_iter++)
+    for(find_iter = _index.begin();find_iter != _index.end();find_iter++)
     {
         if(find_iter->first == key)
         {
@@ -228,16 +378,16 @@ int crawler_config::config_write(const string& key,const string& value)
     }
     
     //配置文件中已有该键值
-    if(find_iter != config_index.end())
+    if(find_iter != _index.end())
     {
         //键值的行号
-        locate_line = distance(config_index.begin(),find_iter);
+        locate_line = distance(_index.begin(),find_iter);
         //定位到写入位置
         for(int i = locate_line-1; i >= 0; i--)
         {
-            write_offset += config_index.at(i).second; 
+            write_offset += _index.at(i).second; 
         }
-        config_write_file.seekp(write_offset+1);
+        _write_file_fd.seekp(write_offset+1);
         
         //如果写入位置在第一行
         if(locate_line == 0)
@@ -264,15 +414,16 @@ int crawler_config::config_write(const string& key,const string& value)
             }
         }
         
-        config_write_file.write(config_item_tmp,strlen(config_item_tmp));
-        config_write_file.close();
-        config_map[key] = value;
-        config_index[locate_line] = make_pair(key,strlen(config_item_tmp));
+        _write_file_fd.write(config_item_tmp,strlen(config_item_tmp));
+        _write_file_fd.close();
+        vec_key.push_back(value);
+        config_map.insert(pair<string,vector<string> >(key,vec_key));
+        _index[locate_line] = make_pair(key,strlen(config_item_tmp));
         res = 1;
         return res;
     }
 
-    config_write_file.seekp(0,ios::end);
+    _write_file_fd.seekp(0,ios::end);
     if(config_map.empty())
     {
         snprintf(config_item_tmp,EACH_LINE_MAX,"%s",config_item.c_str());
@@ -281,10 +432,13 @@ int crawler_config::config_write(const string& key,const string& value)
     {
         snprintf(config_item_tmp,EACH_LINE_MAX,"\n%s",config_item.c_str());
     }
-    config_write_file.write(config_item_tmp,strlen(config_item_tmp));
-    config_write_file.close();
-    config_map[key] = value;
-    config_index.push_back(make_pair(key,strlen(config_item_tmp)));
+    _write_file_fd.write(config_item_tmp,strlen(config_item_tmp));
+    _write_file_fd.close();
+    vec_key.push_back(value);
+    config_map.insert(pair<string,vector<string> >(key,vec_key));
+    _index.push_back(make_pair(key,strlen(config_item_tmp)));
 
     return res;
 }
+
+

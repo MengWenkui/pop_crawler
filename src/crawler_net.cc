@@ -3,21 +3,14 @@ using namespace std;
 
 crawler_net::crawler_net()
 {
+    //初始化布隆适配器
+    url_bloom_filter.bloom_filter_init(1000000,0.001);
     //设置发送回调函数
     request_epoll.init(&request_callback_func);
     //设置接收回调函数
     response_epoll.init(&response_callback_func);
     //初始化线程池
     work_thread_poll(30);
-    //添加默认情况下的必要header
-    header_map["Host"] = 网站域名;
-    header_map["Referer"] = 带有协议的域名;
-    header_map["User_Agent"] = 用户行I下（采用agent池机制），防down机制之一;
-    header_map["Cache-Control"] = 缓存方式;
-    header_map["Date"] = 当前时间;
-    header_map["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"; 
-    header_map["Accept-Encoding"] = "gzip,deflate";
-    header_map["Accept-Language"] = "zh-cn,zh;q=0.8,en-us;q=0.5,en;q=0.3";
 }
 
 crawler_net::~crawler_net()
@@ -105,6 +98,20 @@ int crawler_net::net_dns_parse(const string& domain,string& host_ip)
     return 0;
 }
 
+void crawler_net::set_default_header()
+{
+    //添加默认情况下的必要header
+    header_map["Host"] = url_parser.HOST;
+    header_map["Referer"] = url_parser.PROTOCAL + "//:" + url_parser.HOST;
+    header_map["User_Agent"] = 用户行I下（采用agent池机制），防down机制之一;
+    header_map["Cache-Control"] = 缓存方式;
+    header_map["Date"] = 当前时间;
+    header_map["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"; 
+    header_map["Accept-Encoding"] = "gzip,deflate";
+    header_map["Accept-Language"] = "zh-cn,zh;q=0.8,en-us;q=0.5,en;q=0.3";
+   
+}
+
 void* crawler_net::request_callback_func(const int sock,const int opt)
 {
     //5 收到epoll回调，将任务加入到线程池中
@@ -125,6 +132,7 @@ void* crawler_net::thread_request_func(void* obj)
     if(!crawler_socket::socket_send(para->socket_fd,para->request,para->request.size()))
     {
         //请求成功就将url放入bloom_filter
+        url_bloom_filter.bloom_filter_add(para->url_parser.URL);
         //成功了就退出，归还线程资源
     }
 
@@ -141,6 +149,8 @@ void* response_callback_func(const int sock,const int opt)
     if(EV_DROP = opt)
     {
         //断线处理
+        //把套接字从epoll中删除
+        //关闭套接字
     }
 }
 
