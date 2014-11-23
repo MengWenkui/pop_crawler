@@ -1,8 +1,7 @@
 #include "crawler_bloom_filter.h"
 using namespace std;
 
-//带有参数的构造函数，可以设置最大元素数和假正率，默认为10000和0.01
-crawler_bloom_filter::crawler_bloom_filter(const unsigned long long max_ele_num,const double false_positive)
+void crawler_bloom_filter::_constructor(const unsigned long long max_ele_num,const double false_positive)
 {
     ele_counts = 0;
     //布隆过滤器位图大小计算公式：2*最大的元素个数*ln(1/假正率)
@@ -23,6 +22,13 @@ crawler_bloom_filter::crawler_bloom_filter(const unsigned long long max_ele_num,
         printf("种子%d=%d",i,_seeds[i]);
     }
     //printf("最大元素个数【%d】,假正率【%0.2f】,位图大小【%d】,哈希函数个数【%d】,位图块大小【%d】\n",max_ele_num,false_positive,_size,_hash_num,_bit_block);
+
+}
+
+//带有参数的构造函数，可以设置最大元素数和假正率，默认为10000和0.01
+crawler_bloom_filter::crawler_bloom_filter(const unsigned long long max_ele_num,const double false_positive)
+{
+    _constructor(max_ele_num,false_positive);
 }
 
 //析构函数
@@ -32,6 +38,11 @@ crawler_bloom_filter::~crawler_bloom_filter()
     delete [] _seeds;
     _bit_map = NULL;
     _seeds = NULL;
+}
+
+int crawler_bloom_filter::bloom_filter_init(const unsigned long long max_ele_num,const double false_positive)
+{
+    _constructor(max_ele_num,false_positive);
 }
 
 //判断元素是否在布隆过滤器中存在
@@ -59,7 +70,7 @@ int crawler_bloom_filter::bloom_exist(const string& jurge_str)
 
 //查看位图中相应位是否为1
 //返回值：true是1,false不是1
-bool crawler_bloom_filter::bloom_bit_jurge(const long long bit_pos)
+bool crawler_bloom_filter::bloom_bit_jurge(const unsigned long long bit_pos)
 {
     //计算位图块位置
     int array_pos = bit_pos / _bit_block;
@@ -121,7 +132,7 @@ int crawler_bloom_filter::bloom_add(const string& element)
 
 //在位图的相应位置设为1
 //返回值：true设置成功，false设置失败
-bool crawler_bloom_filter::bloom_bit_set(const long long  bit_pos)
+bool crawler_bloom_filter::bloom_bit_set(const unsigned long long  bit_pos)
 {
     if(bit_pos >= _size)
     {

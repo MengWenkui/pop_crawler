@@ -5,15 +5,13 @@
 #include <string.h>
 using namespace std;
 
-int err_code;
-
 const string COMMENT_MARK = "#";
 const string SPACE_MARK = "*";
 const string ASSIGN_MARK = "=";
 const char DOT_MARK = ','; 
 const char COLON_MARK = '"';
 
-#define EACH_LINE_MAX 2048 
+const int EACH_LINE_MAX = 2048; 
 
 void crawler_config::_constructor()
 {
@@ -31,7 +29,7 @@ crawler_config::crawler_config(const string& file_name)
 
     if(_file_open(file_name))
     {
-        printf("生成配置文件失败，错误码【%d】",err_code);
+        printf("\033[1;%dm生成配置文件地图失败，错误码【%d】\033[0m\n",31,err_code);
     }
 
 }
@@ -72,7 +70,7 @@ int crawler_config::config_init(const string& file_name)
 {
     if(_file_open(file_name))
     {
-        printf("生成配置文件失败，错误码【%d】",err_code);
+        printf("\033[1;%dm生成配置文件地图失败，错误码【%d】\033[0m\n",31,err_code);
         return -1;
     }
     
@@ -440,5 +438,3 @@ int crawler_config::config_write(const string& key,const string& value)
 
     return res;
 }
-
-

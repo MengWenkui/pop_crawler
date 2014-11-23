@@ -16,12 +16,18 @@
 #include "crawler_thread_pool.h"
 #include "crawler_log.h"
 #include "crawler_bloom_filter.h"
+#include "crawler_user_agent_pool.h"
+#include "crawler_url_parse.h"
+
+typedef void* (epoll_call_back)(const int,const int);
+typedef void* (thread_call_back)(void*);
 
 struct socket_packet
 {
     int socket_fd;
     string request;
-}
+    string url;
+};
 
 class crawler_net
 {
@@ -29,22 +35,26 @@ public:
     crawler_net();
     ~crawler_net();
     int net_reload();
-    int net_add_header();
-    int net_http_get();
-    int net_http_post();
+    int net_set_header(const string&,const string&);
+    int net_http_get(const string&);
+    int net_http_post(const string&,const string&);
 private:
+    crawler_user_agent_pool _agent_pool;
     crawler_bloom_filter url_bloom_filter;
-    string http;
-    crawler_thread_poll work_thread_poll;
+    crawler_thread_pool work_thread_pool;
     crawler_url_parse url_parser;
     crawler_epoll request_epoll;
     crawler_epoll response_epoll;
+    static string http;
     std::map<std::string,std::string> header_map;
     int net_url_parse();
     int net_dns_parse(const std::string&,string&);
     int net_socket_init();
-    void* request_callback_func(const int,const int);
-    void* response_callback_func(const int,const int);
+    epoll_call_back request_callback_func;
+    epoll_call_back response_callback_func;
+    void set_default_header();
+    thread_call_back thread_request_func;
+    thread_call_back thread_response_func;
 };
 
 #endif

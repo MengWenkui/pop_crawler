@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <queue>
 #include <vector>
+#include <malloc.h>
 
 //任务队列
 struct job
@@ -33,6 +34,7 @@ public:
     int err_code;
     crawler_thread_pool(const int thread_num = 10);
     ~crawler_thread_pool();
+    int thread_pool_init(const int);
     int thread_pool_add_job(void* (*)(void*),void*);
     int thread_pool_destroy();
     pthread_mutex_t mutex;
@@ -46,6 +48,7 @@ public:
 private:
     int thread_num;
     static void* thread_pool_func(void*);
+    void _constructor(const int);
 };
 
 #endif

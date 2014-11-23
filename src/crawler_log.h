@@ -1,34 +1,23 @@
 /**
- * 爬虫日志类
+ * 日志记录类
  * 作者：张春阳
  * 创建日期：2014-10-24
  */
-//#pragma once
+#pragma once
 #ifndef _CRAWLER_LOG_H
 #define _CRAWLER_LOG_H
 
-#include <stdio.h>
-#include <unistd.h>
+#include "crawler_time_alarm.h"
+#include "crawler_config.h"
 #include <fstream>
 #include <string>
-#include <time.h>
-#include <string.h>
-#include <stdarg.h>
-#include "crawler_config.h"
-#include "crawler_time_alarm.h"
 
-int itoa(int,char*);
+using std::ofstream;
+using std::string;
 
 class crawler_log
 {
 public:
-    crawler_time_alarm log_alarm;
-    crawler_config log_config;
-    int INTERVAL_TIME;
-    int switch_time;
-    std::ofstream log_file;
-    std::string current_log_time;
-    std::string LOG_PATH;
     //构造函数
     crawler_log();
     //带有参数的构造函数
@@ -44,18 +33,34 @@ public:
     //打印系统日志
     void LOG_WRITE_SYS(const std::string&,...);
 private:
-    int err_code;
-    std::string PREFIX;
-    std::string LAST_LOG_TIME;
+    crawler_time_alarm _log_alarm;
+    crawler_config _log_config;
+    ofstream _log_file;
+    string _current_log_time;
+    string LOG_PATH;
+    string PREFIX;
+    string LAST_LOG_TIME;
+    int INTERVAL_TIME;
+    int _switch_time;
     enum LEVEL{
         SYS = -2,
         ERROR = -1,
         PROCESS = 0
      } level;
-    int log_check();
-    bool log_set_timeout();
-    void get_current_time(struct tm*&);
-    static void* log_switch_fn(void*);
+    enum COLOR{
+        GREEN = 32,
+        RED = 31,
+        YELLOW = 33,
+        BLUE = 34,
+        PURPLE = 35
+    } color;
+
+    void _constructor();
+    void _read_config(const string&);
+    void _write_log(int,const string&,const int color);
+    int _log_check();
+    bool _log_set_timeout();
+    static void* _log_switch_fn(void*);
 };
 
 #endif

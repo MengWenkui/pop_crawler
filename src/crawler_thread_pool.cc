@@ -1,13 +1,12 @@
 #include "crawler_thread_pool.h"
 using namespace std;
 
-//线程池构造函数
-crawler_thread_pool::crawler_thread_pool(const int thread_num)
+void crawler_thread_pool::_constructor(const int threads)
 {
     do
     {
         //线程池中线程的数量
-        thread_num = 10;
+        thread_num = threads;
         //队列任务数
         queue_max_num = 20;
         //初始化互斥量
@@ -56,6 +55,13 @@ crawler_thread_pool::crawler_thread_pool(const int thread_num)
         }
     }
     while(0);
+
+}
+
+//线程池构造函数
+crawler_thread_pool::crawler_thread_pool(const int thread_num)
+{
+    _constructor(thread_num);
 }
 
 //线程池析构函数
@@ -77,6 +83,11 @@ crawler_thread_pool::~crawler_thread_pool()
 
     free(p_threads);
     */
+}
+
+int crawler_thread_pool::thread_pool_init(const int thread_num)
+{
+    _constructor(thread_num);
 }
 
 //向线程队列中添加job

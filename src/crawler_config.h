@@ -1,11 +1,11 @@
 /**
- * 爬虫配置文件类
+ * 配置文件操作
  * 作者：张春阳
  * 创建时间：2014-10-25
  */
 #pragma once
-#ifndef CRAWLER_CONFIG_H
-#define CRAWLER_CONFIG_H
+#ifndef _CRAWLER_CONFIG_H
+#define _CRAWLER_CONFIG_H
 
 #include <fstream>
 #include <map>
@@ -22,9 +22,9 @@ class crawler_config
 {
 public:
     //配置文件名
-    std::string config_file_name;
+    string config_file_name;
     //配置文件map
-    std::map<std::string,std::vector<std::string> > config_map;
+    map<std::string,std::vector<string> > config_map;
     //无参数构造函数，需要单独init 
     crawler_config();
     //有参数构造函数，不需要init
@@ -39,6 +39,7 @@ private:
     fstream _read_file_fd;
     fstream _write_file_fd;
     vector<pair<string,int> > _index;
+
     void _trim_solon(string&);
     void _split_value(const string&,vector<string>&);
     int _file_open(const string&);

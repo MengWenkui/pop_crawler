@@ -2,4 +2,5 @@ a.out
 server
 *~
 *o
-.swp
+*.swp
+*.log
