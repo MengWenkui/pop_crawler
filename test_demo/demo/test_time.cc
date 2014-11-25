@@ -1,10 +1,10 @@
-#include "crawler_time_alarm.h"
+#include "../../src/crawler_time_alarm.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <iostream>
 using namespace std;
 
-void* call_back(void* arg)
+void call_back(void* arg)
 {
     cout << *(char*)arg << endl;
 }

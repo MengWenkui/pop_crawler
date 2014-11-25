@@ -1,4 +1,5 @@
 #include "crawler_net.h"
+#include <iostream>
 using namespace std;
 
 crawler_net::crawler_net()
@@ -36,7 +37,9 @@ int crawler_net::net_http_get(const string& url)
     net_dns_parse(url_parser.HOST,ip);
     //3 设置好相应的request的内容
     //通过get的方式进行数据发送,包括无数据
-    string http_request = "GET" + url_parser.PATH + url_parser.PARAM + "HTTP/1.1\r\n";
+    string http_request = "GET " + url_parser.PATH + url_parser.PARAM + " HTTP/1.1\r\n";
+
+    _set_default_header();
     string http_header;
     //从header_map中取出header并放入http请求报文中
     map<string,string>::iterator header_iter = header_map.begin();
@@ -51,7 +54,7 @@ int crawler_net::net_http_get(const string& url)
     }
 
     http = http_request + http_header + "\r\n" + http_data;
-
+    printf("组织好的get报文\n%s\n",http.c_str());
     //4 建立连接并放入epoll
     if(!url_parser.PORT)
     {
@@ -61,12 +64,14 @@ int crawler_net::net_http_get(const string& url)
     crawler_socket http_socket(80,1,ip);
     request_epoll.epoll_add(http_socket.socket_fd,EPOLLOUT | EPOLLIN); 
         
+    request_epoll.epoll_run(10);
     return 0;   
 }
 
 int crawler_net::net_http_post(const string& http_url,const string& data)
 {
     //通过post的方式进行数据发送
+
     return 0;
 }
 
@@ -100,7 +105,7 @@ int crawler_net::net_dns_parse(const string& domain,string& host_ip)
     return 0;
 }
 
-void crawler_net::set_default_header()
+void crawler_net::_set_default_header()
 {
     //添加默认情况下的必要header
     header_map["Host"] = url_parser.HOST;
@@ -116,6 +121,8 @@ void crawler_net::set_default_header()
 
 void* crawler_net::request_callback_func(const int sock,const int opt)
 {
+    printf("收到EPOLL的回调\n");
+
     //5 收到epoll回调，将任务加入到线程池中
     if(EV_WRITE == opt)
     {
@@ -129,8 +136,9 @@ void* crawler_net::request_callback_func(const int sock,const int opt)
 
 }
 
-void* crawler_net::thread_request_func(void* obj)
+void crawler_net::thread_request_func(void* obj)
 {
+    printf("请求线程工作");
     socket_packet *para = (socket_packet*)obj;
 
     if(!crawler_socket::socket_send(para->socket_fd,para->request,para->request.size()))
@@ -164,7 +172,7 @@ void* crawler_net::response_callback_func(const int sock,const int opt)
     }
 }
 
-void* crawler_net::thread_response_func(void* obj)
+void crawler_net::thread_response_func(void* obj)
 {
     socket_packet * para = (socket_packet*)obj;
 

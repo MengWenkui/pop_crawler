@@ -288,7 +288,7 @@ int crawler_config::_trim_space(string& trim_str)
     }
 
     //找到第1个字符串不为空的位置
-    int i = 0,start_pos = 0,end_pos = 0;
+    unsigned int i = 0,start_pos = 0,end_pos = 0;
 
     for(i = 0;i < trim_str.size();i++)
     {
@@ -358,7 +358,7 @@ int crawler_config::config_write(const string& key,const string& value)
         return err_code;
     }
 
-    int write_offset = 0,origin_length = 0;
+    unsigned int write_offset = 0,origin_length = 0;
     int locate_line = 0;
     char config_item_tmp[EACH_LINE_MAX] = {0};
     //写入的配置项

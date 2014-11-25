@@ -1,1 +1,0 @@
-/usr/bin/c++       CMakeFiles/crawler.dir/crawler_main.cc.o CMakeFiles/crawler.dir/crawler_net.cc.o CMakeFiles/crawler.dir/test.cc.o  -o crawler -rdynamic -lcurl 

@@ -1,4 +1,7 @@
 #include "crawler_bloom_filter.h"
+#include <stdio.h>
+#include <cmath>
+#include <memory.h>
 using namespace std;
 
 void crawler_bloom_filter::_constructor(const unsigned long long max_ele_num,const double false_positive)
@@ -19,7 +22,7 @@ void crawler_bloom_filter::_constructor(const unsigned long long max_ele_num,con
     for(int i = 0;i < _hash_num; i++)
     {
         _seeds[i] = (i+1)*(i+1)+1;
-        printf("种子%d=%d",i,_seeds[i]);
+        //printf("种子%d=%d",i,_seeds[i]);
     }
     //printf("最大元素个数【%d】,假正率【%0.2f】,位图大小【%d】,哈希函数个数【%d】,位图块大小【%d】\n",max_ele_num,false_positive,_size,_hash_num,_bit_block);
 
@@ -43,6 +46,7 @@ crawler_bloom_filter::~crawler_bloom_filter()
 int crawler_bloom_filter::bloom_filter_init(const unsigned long long max_ele_num,const double false_positive)
 {
     _constructor(max_ele_num,false_positive);
+    return 0;
 }
 
 //判断元素是否在布隆过滤器中存在
@@ -58,8 +62,8 @@ int crawler_bloom_filter::bloom_exist(const string& jurge_str)
     //查看bitmap中元素是否存在
     for(int i = 0;i < _hash_num; i++)
     {
-        int hash_value = bloom_hash_value(jurge_str,i);
-        if(!bloom_bit_jurge(hash_value))
+        int hash_value = _hash_value(jurge_str,i);
+        if(!_bit_jurge(hash_value))
         {
             return 0; 
         }
@@ -70,7 +74,7 @@ int crawler_bloom_filter::bloom_exist(const string& jurge_str)
 
 //查看位图中相应位是否为1
 //返回值：true是1,false不是1
-bool crawler_bloom_filter::bloom_bit_jurge(const unsigned long long bit_pos)
+bool crawler_bloom_filter::_bit_jurge(const unsigned long long bit_pos)
 {
     //计算位图块位置
     int array_pos = bit_pos / _bit_block;
@@ -89,11 +93,11 @@ bool crawler_bloom_filter::bloom_bit_jurge(const unsigned long long bit_pos)
 
 //计算hash值，这是一种简单的算法
 //返回值：hash值
-int crawler_bloom_filter::bloom_hash_value(const string& str,const int n)
+int crawler_bloom_filter::_hash_value(const string& str,const int n)
 {
-    int res = 0;
+    unsigned int res = 0;
     //迭代每个字符计算hash值
-    for(int i = 0;i < str.size()-1;i++)
+    for(unsigned int i = 0;i < str.size()-1;i++)
     {
         res = _seeds[n] * res + (int)str[i];
         if(res > _size)
@@ -124,15 +128,15 @@ int crawler_bloom_filter::bloom_add(const string& element)
     //向位图中添加hash掩码
     for(int i = 0;i < _hash_num;i++)
     {
-        int hash_value = bloom_hash_value(element,i);
-        bloom_bit_set(hash_value);
+        int hash_value = _hash_value(element,i);
+        _bit_set(hash_value);
     }
     return 0;
 }
 
 //在位图的相应位置设为1
 //返回值：true设置成功，false设置失败
-bool crawler_bloom_filter::bloom_bit_set(const unsigned long long  bit_pos)
+bool crawler_bloom_filter::_bit_set(const unsigned long long  bit_pos)
 {
     if(bit_pos >= _size)
     {

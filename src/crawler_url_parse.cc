@@ -1,4 +1,5 @@
 #include "crawler_url_parse.h"
+
 using namespace std;
 using namespace boost;
 
@@ -37,7 +38,18 @@ int crawler_url_parse::url_parse(const string& url)
     PROTOCAL = matches[1];
     HOST = matches[2]; 
     PORT = atoi(matches[3].str().c_str());
+    
+    if(0 == PORT)
+    {
+        PORT = 80;
+    }
+
     PATH = matches[4];
+    if(PATH.empty())
+    {
+        PATH = "/";
+    }
+
     PARAM = matches[5]; 
 
     //url_param_parse(param);

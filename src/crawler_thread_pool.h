@@ -1,23 +1,24 @@
 /**
- * 网络爬虫线程池类
+ * 线程池类
  * 作者：张春阳
  * 创建时间：2014-11-4
  */
-#ifndef CRAWLER_THREAD_POOL
-#define CRAWLER_THREAD_POOL
+#ifndef _CRAWLER_THREAD_POOL_H
+#define _CRAWLER_THREAD_POOL_H
 
-#include <stdio.h>
 #include <pthread.h>
 #include <queue>
 #include <vector>
-#include <malloc.h>
+
+using std::vector;
+using std::priority_queue;
 
 //任务队列
 struct job
 {
-    void* (*callback_func)(void *arg);
+    void (*callback_func)(void *arg);
     void *arg;
-    int level;
+    unsigned int level;
 };
 
 struct job_cmp
@@ -31,24 +32,30 @@ struct job_cmp
 class crawler_thread_pool
 {
 public:
-    int err_code;
-    crawler_thread_pool(const int thread_num = 10);
+    crawler_thread_pool();
+    crawler_thread_pool(const int);
     ~crawler_thread_pool();
     int thread_pool_init(const int);
-    int thread_pool_add_job(void* (*)(void*),void*);
+    int thread_pool_add_job(void (*)(void*),void*);
     int thread_pool_destroy();
-    pthread_mutex_t mutex;
-    pthread_t *p_threads;
-    pthread_cond_t queue_empty;
-    pthread_cond_t queue_not_empty;
-    pthread_cond_t queue_not_full;
-    std::priority_queue<job,std::vector<job>,job_cmp> job_queue; 
-    bool pool_close_flag;
-    int queue_max_num;
-private:
-    int thread_num;
-    static void* thread_pool_func(void*);
-    void _constructor(const int);
+    private:
+    bool _pool_close_flag;
+    unsigned int _thread_num;
+    unsigned int _queue_max_num;
+    pthread_mutex_t _mutex;
+    pthread_t *_p_threads;
+    pthread_cond_t _queue_empty;
+    pthread_cond_t _queue_not_empty;
+    pthread_cond_t _queue_not_full;
+    priority_queue<job,vector<job>,job_cmp> _job_queue; 
+    
+    void _constructor();
+    int _create_thread_pool(const unsigned int);
+    static void* _thread_func(void *p)
+    {
+        static_cast<crawler_thread_pool*>(p)->_thread_pool_func(p);
+    }
+    void _thread_pool_func(void*);
 };
 
 #endif

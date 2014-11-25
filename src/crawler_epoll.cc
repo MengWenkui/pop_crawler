@@ -137,32 +137,39 @@ int crawler_epoll::epoll_run(const int timeout)
             int op = 0;
 
             cout << "事件的代码" << events[i].events << endl;
-
             //错误事件和等待延时事件，暂时不做处理
-            if(events[i].events & (EPOLLERR | EPOLLHUP))
+            if(events[i].events == (EPOLLERR | EPOLLHUP))
             {
+                cout << "1" << endl;
                 continue;
             }
             //对方断开连接事件
             else if(events[i].events == (EPOLLRDHUP | EPOLLIN))
             {
-                op |= EV_DROP;
+                cout << "2" << endl;
+                op = EV_DROP;
             }
             else if(events[i].data.fd == server_fd)
             {
-                op |= EV_ACCEPT;
+                cout << "3" << endl;
+                op = EV_ACCEPT;
             }
             //正常的读写事件
             else
             {
-                if(events[i].events & EPOLLIN)
+                cout << "4" << endl;
+                if(events[i].events == EPOLLIN)
                 {
-                    op |= EV_READ;
+                    op = EV_READ;
                 }
 
-                if(events[i].events & EPOLLOUT)
+                if(events[i].events == EPOLLOUT)
                 {
-                    op |= EV_WRITE;
+                    op = EV_WRITE;
+                }
+                if(events[i].events == (EPOLLOUT | EPOLLHUP ))
+                {
+                    op = EV_WRITE;
                 }
             }
 
@@ -190,13 +197,13 @@ bool crawler_epoll::epoll_manage(const int socket_fd,const uint32_t env,const in
 
     if(epo_type == 0)
     {
-        event_tmp.events |= EPOLLRDHUP;
+        event_tmp.events |= env | EPOLLRDHUP;
     }
 
     if(epo_type == 1)
     {
         event_tmp.events |= EPOLLRDHUP;
-        event_tmp.events = env | EPOLLET;
+        event_tmp.events |= env | EPOLLET;
     }
 
     if(epoll_ctl(epo_fd,option,socket_fd,&event_tmp))

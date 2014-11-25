@@ -51,7 +51,7 @@ void crawler_log::_read_config(const string& config_path)
 
     if(_log_set_timeout())
     {
-        printf("\033[1;%dm设置日志切换时间失败，错误码【%s】\033[0m\n",err_code);
+        printf("\033[1;%dm设置日志切换时间失败，错误码【%d】\033[0m\n",31,err_code);
         return;
     }
 
@@ -107,7 +107,7 @@ int crawler_log::_log_check()
         _log_file.open(full_log_path.c_str(), ofstream::out | ofstream::app);
         if(_log_file.bad())
         {
-            printf("\033[1;%dm打开日志文件失败，文件路径【%s】\033[0m\n",full_log_path.c_str());
+            printf("\033[1;%dm打开日志文件失败，文件路径【%s】\033[0m\n",31,full_log_path.c_str());
             return -1;
         }
         _switch_time = switch_hour*60*60 + switch_minute*60;
@@ -123,7 +123,7 @@ int crawler_log::_log_check()
 
     if(_log_file.bad())
     {
-        printf("\033[1;%dm创建日志文件失败，文件路径【%s】\033[0m\n",full_log_path.c_str());
+        printf("\033[1;%dm创建日志文件失败，文件路径【%s】\033[0m\n",31,full_log_path.c_str());
         return -2;
     }
 
@@ -200,7 +200,7 @@ void crawler_log::LOG_WRITE_SYS(const string& format,...)
 }
 
 //日志切换定时动作
-void* crawler_log::_log_switch_fn(void* obj)
+void crawler_log::_log_switch_fn(void* obj)
 {
     crawler_log *para = (crawler_log*)obj;
 

@@ -5,14 +5,12 @@
  */
 
 #pragma once
-#ifndef _CRAWLER_BLOOM_FILTER
-#define _CRAWLER_BLOOM_FILTER
+#ifndef _CRAWLER_BLOOM_FILTER_H
+#define _CRAWLER_BLOOM_FILTER_H
 
-#include <stdio.h>
-#include <cmath>
-#include <bitset>
 #include <string>
-#include <memory.h>
+
+using std::string;
 
 class crawler_bloom_filter
 {
@@ -24,9 +22,9 @@ public:
     //布隆过滤器初始化
     int bloom_filter_init(const unsigned long long,const double);
     //检查布隆过滤器中是否存在值
-    int bloom_exist(const std::string&);
+    int bloom_exist(const string&);
     //向布隆过滤器中添加值
-    int bloom_add(const std::string&);
+    int bloom_add(const string&);
 private:
     int _hash_num;
     unsigned long long _size;
@@ -34,9 +32,9 @@ private:
     unsigned int *_bit_map;
     int *_seeds;
     void _constructor(const unsigned long long,const double);
-    bool bloom_bit_jurge(const unsigned long long);
-    int bloom_hash_value(const std::string&,const int);
-    bool bloom_bit_set(const unsigned long long);
+    bool _bit_jurge(const unsigned long long);
+    int _hash_value(const string&,const int);
+    bool _bit_set(const unsigned long long);
 };
 
 #endif

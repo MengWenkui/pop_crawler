@@ -1,5 +1,5 @@
 /**
- * 爬虫网络类
+ * 网络类
  * 作者：张春阳
  * 创建时间：2014-10-30
  */
@@ -19,8 +19,11 @@
 #include "crawler_user_agent_pool.h"
 #include "crawler_url_parse.h"
 
+using std::string;
+using std::map;
+
 typedef void* (epoll_call_back)(const int,const int);
-typedef void* (thread_call_back)(void*);
+typedef void (thread_call_back)(void*);
 
 struct socket_packet
 {
@@ -45,14 +48,14 @@ private:
     crawler_url_parse url_parser;
     crawler_epoll request_epoll;
     crawler_epoll response_epoll;
-    static string http;
-    std::map<std::string,std::string> header_map;
+    string http;
+    map<string,string> header_map;
     int net_url_parse();
-    int net_dns_parse(const std::string&,string&);
+    int net_dns_parse(const string&,string&);
     int net_socket_init();
     epoll_call_back request_callback_func;
     epoll_call_back response_callback_func;
-    void set_default_header();
+    void _set_default_header();
     thread_call_back thread_request_func;
     thread_call_back thread_response_func;
 };

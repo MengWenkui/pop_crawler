@@ -15,7 +15,7 @@ int crawler_basic::itoa(int val,char *tmp)
 {
     const unsigned int radix = 10;
     char *p = NULL,*b = NULL;
-    unsigned int a = 0,u = 0;
+    unsigned int u = 0;
     int len = 0;
     char temp;
      
@@ -33,7 +33,6 @@ int crawler_basic::itoa(int val,char *tmp)
  
     do
     {
-        a = u%radix;
         u /= radix;
     }
     while(u > 0);

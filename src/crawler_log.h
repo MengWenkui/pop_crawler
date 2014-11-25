@@ -60,7 +60,7 @@ private:
     void _write_log(int,const string&,const int color);
     int _log_check();
     bool _log_set_timeout();
-    static void* _log_switch_fn(void*);
+    static void _log_switch_fn(void*);
 };
 
 #endif

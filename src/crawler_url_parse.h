@@ -1,27 +1,29 @@
+#pragma once
 #ifndef _CRAWLER_URL_PARSE_H
 #define _CRAWLER_URL_PARSE_H
 
-#pragma once
 #include <string>
 #include <boost/regex.hpp>
-#include <map>
+//#include <map>
+
+using std::string;
 
 class crawler_url_parse
 {
 public:
-    std::string URL;
-    std::string PROTOCAL;
-    std::string HOST;
+    string URL;
+    string PROTOCAL;
+    string HOST;
     int PORT;
-    std::string PATH;
+    string PATH;
     //std::map<std::string,std::string> PARAM;
-    std::string PARAM;
+    string PARAM;
     crawler_url_parse();
     ~crawler_url_parse();
-    int url_parse(const std::string&);
+    int url_parse(const string&);
 private:
-    std::string reg_pattern;
-    void url_param_parse(std::string&);
+    string reg_pattern;
+    void url_param_parse(string&);
 };
 
 #endif

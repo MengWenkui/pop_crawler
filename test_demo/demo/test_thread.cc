@@ -1,11 +1,11 @@
-#include "crawler_thread_pool.h"
+#include "../../src/crawler_thread_pool.h"
 #include <stdio.h>
 #include <iostream>
 #include <unistd.h>
 #include <pthread.h>
 using namespace std;
 
-void* work(void* msg)
+void work(void* msg)
 {
     char *p = (char*) msg;
     printf("回调函数%s\n",p);
@@ -14,7 +14,7 @@ void* work(void* msg)
 
 int main(int argv,char **argc)
 {
-    crawler_thread_pool m_thread;
+    crawler_thread_pool m_thread(10);
     m_thread.thread_pool_add_job(work,(void*)"1");
     m_thread.thread_pool_add_job(work,(void*)"2");
     m_thread.thread_pool_add_job(work,(void*)"3");
